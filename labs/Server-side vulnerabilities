@@ -1,1 +1,24 @@
+1.PATH TRAVESAL
+- on unix
+  +ex: https://insecure-website.com/loadImage?filename=../../../etc/passwd
+- on Window
+  +ex: https://insecure-website.com/loadImage?filename=..\..\..\windows\win.ini
+**on window ../ is also valid path.
+()Lab: File path traversal, simple case: use Burp suite to send request contain ../../../../etc/passwd
+
+2.ACCESS CONTROL
+- What is access control?
+Access control is the application of constraints on who or what is authorized to perform actions or access resources. In the context of web applications, access control is dependent on authentication and session management:
+-Vertical privilege escalation
+-Unprotected functionality
+  +EX: https://insecure-website.com/admin
+  +EX: https://insecure-website.com/robots.txt (maybe contain important information)
+  +maybe in source (java script contain important information such as /admin-panel 
+-Parameter-based access control methods
+  +EX: https://insecure-website.com/login/home.jsp?admin=true
+       https://insecure-website.com/login/home.jsp?role=1
+
+
+
+
 
