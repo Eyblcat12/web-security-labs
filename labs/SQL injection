@@ -1,1 +1,36 @@
+-What is SQL injection (SQLi)?
+  +The single quote character ' and look for errors or other anomalies.
+  +Some SQL-specific syntax that evaluates to the base (original) value of the entry point, and to a different value, and look for systematic differences in the application responses.
+  +Boolean conditions such as OR 1=1 and OR 1=2, and look for differences in the application's responses.
+  +Payloads designed to trigger time delays when executed within a SQL query, and look for differences in the time taken to respond.
+  +OAST payloads designed to trigger an out-of-band network interaction when executed within a SQL query, and monitor any resulting interactions.
+
+-SQL injection in different parts of the query
+  +Most SQL injection vulnerabilities occur within the WHERE clause of a SELECT query.
+  +In UPDATE statements, within the updated values or the WHERE clause.
+  +In INSERT statements, within the inserted values.
+  +In SELECT statements, within the table or column name.
+  +In SELECT statements, within the ORDER BY clause.
+
+-Retrieving hidden data
+
+-SQL injection UNION attacks
+  + you can use the UNION keyword to retrieve data from other tables within the database.
+  For a UNION query to work, two key requirements must be met:
+    The individual queries must return the same number of columns.
+    The data types in each column must be compatible between the individual queries.
++How many columns are being returned from the original query.
++Which columns returned from the original query are of a suitable data type to hold the results from the injected query.
+
+-Determining the number of columns required
+  +' ORDER BY 1--
+   ' ORDER BY 2--
+   ' ORDER BY 3--
+  +The application might actually return the database error in its HTTP response, but it may also issue a generic error response. In other cases, it may simply return no results at all. Either way, as long as you can detect some difference in the response, you can infer how many columns are being returned from the query.
+  +' UNION SELECT NULL--
+   ' UNION SELECT NULL,NULL--
+   ' UNION SELECT NULL,NULL,NULL-
+-LAB: category='UNION+SELECT+BY+NULL,NULL,NULL-- => HTTP 200 REP => 3 COLUMN;
+
+-Database-specific syntax
 
