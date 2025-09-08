@@ -1,1 +1,6 @@
+-What is authentication?
+
+-lab 1
+intruder đến chết, k có premium thì tự ngồi do tay, nhận thấy sự khác biệt trong rep ở account "activestat" (khi tìm kiếm cụm từ Invalid... có dấu '.') (nó k có)
+dùng intruder dò mật khẩu từ account đã  có => taylor (vì có http 302 forhibiden) sự khác biệt.
 
