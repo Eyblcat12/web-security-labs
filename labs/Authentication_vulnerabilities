@@ -4,3 +4,16 @@
 intruder đến chết, k có premium thì tự ngồi do tay, nhận thấy sự khác biệt trong rep ở account "activestat" (khi tìm kiếm cụm từ Invalid... có dấu '.') (nó k có)
 dùng intruder dò mật khẩu từ account đã  có => taylor (vì có http 302 forhibiden) sự khác biệt.
 
+-
+Flawed brute-force protection
+lab brute force giới hạn số lượt đăng nhập
+=> pirck attack 
+bước 1: check số lần giới hạn
+lập danh sách pass (chèn peter theo số lần giới hạn)
+lập danh sách user (chèn wiener)
+
+=> carlos 123qwe (302 res)
+
+
+-Account locking
+Tìm user name bằng cách thử xem res nào phản hồi về số lần thử mật khẩu của user đó quá nhiều => cos username => sniper nữa là xong  
