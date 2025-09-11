@@ -45,3 +45,11 @@ def handleResponse(req, interesting):
 
 
 dungf turbo intruder, đúng vip sì líp :DDDDDDDD
+
+
+-Keeping users logged in
+lab
+bước 1: quan sát cookie stayloggi => để ý bên base64 url decode => wiener:MD5, lên check với pass là peter => md5 tượng tự cái đó => staylogg = user:md5(pass)
+=> chuyển yêu cầu url từ wiener=> carlos, sau đó lấy pass từ portswigger, convert sang md5 kiểu  carlos:md5(pass) bằng py
+=> convert một lần nữa cụm (carlos:md5(pass)) => base 64 bằng py, gắn nó vào payload của stayloggg r brute force là ra
+
