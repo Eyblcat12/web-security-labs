@@ -8,3 +8,7 @@ Obfuscate blocked strings using URL encoding or case variation.
 Provide a URL that you control, which redirects to the target URL. Try using different redirect codes, as well as different protocols for the target URL. For example, switching from an http: to https: URL during the redirect
 has been shown to bypass some anti-SSRF filters
 
+Cách tìm và khai thác lỗ hổng SSRF mù
+Khi kiểm tra lỗ hổng SSRF, thường thấy có lệnh tra cứu DNS cho miền Collaborator được cung cấp, nhưng không có yêu cầu HTTP nào tiếp theo.
+Điều này thường xảy ra do ứng dụng đã cố gắng gửi yêu cầu HTTP đến miền, dẫn đến lệnh tra cứu DNS ban đầu, nhưng yêu cầu HTTP thực tế đã bị chặn bởi bộ lọc cấp mạng.
+Cơ sở hạ tầng thường cho phép lưu lượng DNS đi, vì điều này cần thiết cho rất nhiều mục đích, nhưng lại chặn các kết nối HTTP đến các đích không mong muốn.
